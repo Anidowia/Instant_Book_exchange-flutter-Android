@@ -30,7 +30,6 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
-
   void _performSearch(String query) async {
     // Reset search results
     setState(() {
@@ -40,7 +39,8 @@ class _SearchPageState extends State<SearchPage> {
     // Query Firestore for books matching the search query
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('books')
-        .where('Title', isEqualTo: query)
+        .where('Title', isGreaterThanOrEqualTo: query)
+        .where('Title', isLessThanOrEqualTo: query + '\uf8ff')
         .get();
 
     // Check if any books were found
