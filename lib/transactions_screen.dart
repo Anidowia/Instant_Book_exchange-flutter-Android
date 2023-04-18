@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project2/drawer.dart';
 import 'package:project2/bottom_app_bar.dart';
 class _TransactionsPageState extends State<TransactionsPage> {
   late Future<List<DocumentSnapshot>> transactions;
+
   @override
   void initState() {
     super.initState();
@@ -13,15 +15,63 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('transactions').get();
     return querySnapshot.docs;
   }
+  void _cancelTransaction(DocumentSnapshot transaction) async {
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
+
+    if (transaction['userEmail'] != currentUserEmail) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Cannot cancel transaction'),
+          content: const Text('You did not initiate this transaction.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel transaction?'),
+        content: const Text('Are you sure you want to cancel this transaction?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await transaction.reference.delete();
+              Navigator.pop(context);
+              setState(() {
+                transactions = getTransactions();
+              });
+            },
+            child: Text('Yes'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Transactions'),
-        backgroundColor: Color(0xff6958ca),
+        title: const Text('Transactions'),
+        backgroundColor: const Color(0xff6958ca),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: FutureBuilder<List<DocumentSnapshot>>(
         future: transactions,
         builder: (context, snapshot) {
@@ -29,26 +79,43 @@ class _TransactionsPageState extends State<TransactionsPage> {
             final List<DocumentSnapshot> transactions = snapshot.data!;
             final List<Widget> items = [];
 
+            if (transactions.isEmpty) {
+              return const Center(
+                child: Text('There are no transactions yet'),
+              );
+            }
+
             for (var i = 0; i < transactions.length; i++) {
               final DocumentSnapshot transaction = transactions[i];
               final String bookTitle = transaction['bookTitle'];
               final String userEmail = transaction['userEmail'];
               final Timestamp transactionDate = transaction['transactionDate'];
+              final String transactionStatus = transaction['status'];
 
               items.add(Card(
                 child: ListTile(
                   title: Text(bookTitle),
                   subtitle: Text('User: $userEmail'),
-                  trailing: Text(transactionDate.toDate().toString()),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(transactionDate.toDate().toString()),
+                      if (transactionStatus == 'Initiated')
+                        IconButton(
+                          icon: const Icon(Icons.cancel),
+                          onPressed: () => _cancelTransaction(transaction),
+                        ),
+                    ],
+                  ),
                 ),
               ));
 
               if ((i + 1) % 2 == 0) {
                 items.add(Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Container(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Text(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: const Text(
                       'Status: Initiated',
                       style: TextStyle(
                         color: Colors.purple,
@@ -66,7 +133,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
               child: Text('Error loading transactions: ${snapshot.error}'),
             );
           } else {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           }
@@ -76,6 +143,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 }
+
+
 class TransactionsPage extends StatefulWidget {
   final String userEmail;
   final String? bookTitle;
