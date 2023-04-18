@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:project2/registration_screen.dart';
 import 'package:project2/search_page.dart';
 import 'package:project2/transactions_screen.dart';
-
 class AppDrawer extends StatelessWidget {
   final String? bookTitle;
   const AppDrawer({
@@ -74,8 +73,7 @@ class AppDrawer extends StatelessWidget {
                       (_) => false,
                 );
               },
-            )
-                : ListTile(
+            ): ListTile(
               leading: Icon(Icons.person),
               title: Text('Sign in'),
               onTap: () {
@@ -87,21 +85,22 @@ class AppDrawer extends StatelessWidget {
                 );
               },
             ),
-            ListTile(
-              leading: Icon(Icons.credit_card),
-              title: Text('Transactions'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TransactionsPage(
-                      userEmail: FirebaseAuth.instance.currentUser?.email ?? "Guest",
-                      bookTitle: bookTitle,
+            if (isUserLoggedIn) // Show "Transactions" only for logged-in users
+              ListTile(
+                leading: Icon(Icons.credit_card),
+                title: Text('Transactions'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransactionsPage(
+                        userEmail: FirebaseAuth.instance.currentUser?.email ?? "Guest",
+                        bookTitle: bookTitle,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
           ],
         ),
       ),
