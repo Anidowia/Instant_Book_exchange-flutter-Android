@@ -25,11 +25,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
           title: const Text('Cannot cancel transaction'),
           content: const Text('You did not initiate this transaction.'),
           actions: [
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xff6958ca),
+              ),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.of(context).pop();
               },
-              child: const Text('OK'),
+              child: Text('OK'),
             ),
           ],
         ),
@@ -47,7 +50,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text('No'),
+            child: const Text('No',
+              style: TextStyle(
+                  color: Color(0xff6958ca)
+              )
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -57,7 +64,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 transactions = getTransactions();
               });
             },
-            child: Text('Yes'),
+            child: Text('Yes',
+            style: TextStyle(
+                color: Color(0xff6958ca)
+            )
+            ),
           ),
         ],
       ),
@@ -118,7 +129,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     child: const Text(
                       'Status: Initiated',
                       style: TextStyle(
-                        color: Colors.purple,
+                        color: Color(0xff6958ca),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
