@@ -47,10 +47,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
             SizedBox(height: 16),
             ElevatedButton(
-              child: Text('Register'),
               style: ElevatedButton.styleFrom(
                 primary: Color(0xff6958ca),
               ),
+              child: Text('Register'),
               onPressed: () async {
                 try {
                   UserCredential userCredential =
