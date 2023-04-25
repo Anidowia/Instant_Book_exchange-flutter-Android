@@ -74,6 +74,59 @@ class _TransactionsPageState extends State<TransactionsPage> {
       ),
     );
   }
+  void _confirmTransaction(DocumentSnapshot transaction) async {
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
+    if (transaction['userEmail'] != currentUserEmail) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Cannot confirm transaction'),
+          content: const Text('You did not initiate this transaction.'),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xff6958ca),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    try {
+      await transaction.reference.update({'userConfirmed': true});
+
+      final updatedTransaction = await transaction.reference.get();
+      final userConfirmed = updatedTransaction['userConfirmed'] ?? false;
+
+      final otherUserTransactionsQuery = FirebaseFirestore.instance
+          .collection('transactions')
+          .where('userEmail', isEqualTo: transaction['userEmail'])
+          .where('userConfirmed', isEqualTo: true);
+      final otherUserTransactions = await otherUserTransactionsQuery.get();
+      for (final otherUserTransaction in otherUserTransactions.docs) {
+        await otherUserTransaction.reference.update({'otherUserConfirmed': true});
+        final otherUserConfirmed = otherUserTransaction['otherUserConfirmed'] ?? false;
+          await otherUserTransaction.reference.update({'status': 'Confirmed'});
+          await transaction.reference.update({'otherUserConfirmed': true, 'status': 'Confirmed'});
+      }
+
+      // set status to 'initiated' if it has not been set already
+      final transactionStatus = updatedTransaction['status'];
+      if (transactionStatus == null || transactionStatus.isEmpty) {
+        await transaction.reference.update({'status': 'Initiated'});
+      }
+    } catch (e) {
+      print('Error confirming transaction: $e');
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +169,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
                           icon: const Icon(Icons.cancel),
                           onPressed: () => _cancelTransaction(transaction),
                         ),
+                        IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: () => _confirmTransaction(transaction),
+                        ),
                     ],
                   ),
                 ),
@@ -126,8 +183,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: const Text(
-                      'Status: Initiated',
+                    child: Text(
+                      transactionStatus == 'Confirmed'
+                          ? 'Status: Confirmed'
+                          : 'Status: Initiated',
                       style: TextStyle(
                         color: Color(0xff6958ca),
                         fontWeight: FontWeight.bold,
@@ -154,7 +213,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 }
-
 
 class TransactionsPage extends StatefulWidget {
   final String userEmail;
