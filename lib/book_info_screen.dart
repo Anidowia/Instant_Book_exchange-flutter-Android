@@ -93,6 +93,8 @@ class BookInfoScreen extends StatelessWidget {
                           'userEmail': user.email,
                           'transactionDate': Timestamp.now(),
                           'status': 'Initiated',
+                          'userConfirmed': false,
+                          'otherUserConfirmed': false,
                         });
                         Navigator.push(
                           context,
