@@ -1,6 +1,6 @@
-# project2
+# Book Exchange Android mobile application
 
-A new Flutter project.
+This was a Mobile Applications Development University project, based on previous Software Engineering University project Developed by a team of 7 using Agile methodologies. It's a portal where book readers can exchange books they already read with new books from other users. It also suggests offerd books in your area. As a registered user, when adding a book, the application automatically suggests titles of the book while you are typing it, and once chosen it fetches from Firestore Database information about the book such as Authors and description (if available).
 
 ## Getting Started
 
